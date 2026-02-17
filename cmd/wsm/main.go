@@ -62,6 +62,10 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err := showLastCommits(ctx, cfg.GitDir, 3); err != nil {
+		slog.Warn("failed to show last commits", slog.Any("error", err))
+	}
+
 	// 4. Workspace Creation
 	folderName := generateFolderName(inputTitle)
 	fullPath := filepath.Join(cfg.WsRoot, folderName)
@@ -172,4 +176,16 @@ func generateFolderName(input string) string {
 	slug = strings.Trim(slug, "-")
 
 	return fmt.Sprintf("%s_%s", date, slug)
+}
+
+// showLastCommits displays the last n commits for the current branch.
+func showLastCommits(ctx context.Context, gitDir string, n int) error {
+	cmd := exec.CommandContext(ctx, "git", "-C", gitDir, "log", "-n", strconv.Itoa(n), "--oneline")
+	output, err := cmd.Output()
+	if err != nil {
+		return fmt.Errorf("git log failed: %w", err)
+	}
+
+	fmt.Printf("\n📜 Last %d commits:\n%s", n, string(output))
+	return nil
 }

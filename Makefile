@@ -4,18 +4,25 @@
 GO := go
 BIN_DIR := bin
 CMD_DIR := cmd
+INSTALL_DIR := $(HOME)/bin
 # Get all subdirectories in cmd/ as the list of binaries to build
 COMMANDS := $(shell [ -d $(CMD_DIR) ] && ls $(CMD_DIR))
 BINARIES := $(addprefix $(BIN_DIR)/,$(COMMANDS))
 
 # Phony targets
-.PHONY: all build test clean fmt vet lint tidy help
+.PHONY: all build install test clean fmt vet lint tidy help
 
 # Default target
 all: clean fmt vet test build
 
 # Build all binaries dynamically
 build: $(BINARIES)
+
+# Install binaries to ~/bin
+install: build
+	@echo "Installing binaries to $(INSTALL_DIR)..."
+	@mkdir -p $(INSTALL_DIR)
+	@cp $(BINARIES) $(INSTALL_DIR)
 
 $(BIN_DIR)/%: $(CMD_DIR)/%/main.go
 	@echo "Building $@..."
@@ -59,11 +66,12 @@ tidy:
 # Help target
 help:
 	@echo "Available targets:"
-	@echo "  all    - Clean, fmt, vet, test, and build (default)"
-	@echo "  build  - Build all binaries in $(CMD_DIR)/"
-	@echo "  test   - Run all tests"
-	@echo "  clean  - Remove $(BIN_DIR)/"
-	@echo "  fmt    - Format code using 'go fmt'"
-	@echo "  vet    - Vet code using 'go vet'"
-	@echo "  lint   - Run golangci-lint (if available)"
-	@echo "  tidy   - Run 'go mod tidy'"
+	@echo "  all     - Clean, fmt, vet, test, and build (default)"
+	@echo "  build   - Build all binaries in $(CMD_DIR)/"
+	@echo "  install - Build and install binaries to $(INSTALL_DIR)"
+	@echo "  test    - Run all tests"
+	@echo "  clean   - Remove $(BIN_DIR)/"
+	@echo "  fmt     - Format code using 'go fmt'"
+	@echo "  vet     - Vet code using 'go vet'"
+	@echo "  lint    - Run golangci-lint (if available)"
+	@echo "  tidy    - Run 'go mod tidy'"
