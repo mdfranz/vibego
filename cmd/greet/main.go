@@ -4,17 +4,28 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
 )
 
 func main() {
-	// Initialize structured logging
-	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
-	slog.SetDefault(logger)
+	envLog := os.Getenv("LOG_ENABLED") == "false"
+	logFlag := flag.Bool("log", envLog, "Enable logging (env: LOG_ENABLED)")
+	defaultName := os.Getenv("GREET_NAME")
+	if defaultName == "" {
+		defaultName = "World"
+	}
 
-	name := flag.String("name", "World", "The name to greet")
+	name := flag.String("name", defaultName, "The name to greet (env: GREET_NAME)")
 	flag.Parse()
+
+	var logOut io.Writer = io.Discard
+	if *logFlag {
+		logOut = os.Stdout
+	}
+	logger := slog.New(slog.NewTextHandler(logOut, nil))
+	slog.SetDefault(logger)
 
 	msg, err := Greet(*name)
 	if err != nil {
